@@ -51,6 +51,10 @@ async function run() {
 
         });
 
+        app.get('/get-pdf',async(req,res)=>{
+            const result = await pdfCollection.find().toArray();
+            res.send(result)
+        })
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
