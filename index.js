@@ -37,12 +37,14 @@ async function run() {
 
         //  const userCollection = client.db('dailypulseDB').collection('users');
         const pdfCollection = client.db('testing-multerDB').collection('pdf-store');
+        const offerCollection = client.db('testing-multerDB').collection('offer-store');
 
         // app.post('/article', async (req, res) => {
         //     const item = req.body;
         //     const result = await articleCollection.insertOne(item);
         //     res.send(result)
         // });
+        // pdf post operation 
         app.post('/upload',async (req, res) => {
             
             const item = req.body;
@@ -50,11 +52,20 @@ async function run() {
                 res.send(result)
 
         });
-
+        // pdf get operation 
         app.get('/get-pdf',async(req,res)=>{
             const result = await pdfCollection.find().toArray();
             res.send(result)
         })
+        // offer post operation 
+        app.post('/offer',async (req, res) => {
+            
+            const item = req.body;
+                const result = await offerCollection.insertOne(item);
+                res.send(result)
+
+        });
+
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
