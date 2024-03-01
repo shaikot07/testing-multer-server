@@ -45,27 +45,33 @@ async function run() {
         //     res.send(result)
         // });
         // pdf post operation 
-        app.post('/upload',async (req, res) => {
-            
+        app.post('/upload', async (req, res) => {
+
             const item = req.body;
-                const result = await pdfCollection.insertOne(item);
-                res.send(result)
+            const result = await pdfCollection.insertOne(item);
+            res.send(result)
 
         });
         // pdf get operation 
-        app.get('/get-pdf',async(req,res)=>{
+        app.get('/get-pdf', async (req, res) => {
             const result = await pdfCollection.find().toArray();
             res.send(result)
         })
         // offer post operation 
-        app.post('/offer',async (req, res) => {
-            
+        app.post('/post-offer', async (req, res) => {
+
             const item = req.body;
-                const result = await offerCollection.insertOne(item);
-                res.send(result)
+            const result = await offerCollection.insertOne(item);
+            console.log(result);
+            res.send(result)
 
         });
 
+        // pdf get operation 
+        app.get('/get-offer', async (req, res) => {
+            const result = await offerCollection.find().toArray();
+            res.send(result)
+        })
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
