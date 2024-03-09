@@ -1,81 +1,239 @@
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const express = require('express');
-const cors = require('cors');
-require('dotenv').config();
-// here mongo require 
-const { MongoClient, ServerApiVersion } = require('mongodb');
-const app = express()
+const cors = require('cors')
+const app = express();
 const port = process.env.PORT || 5000;
+const dotEnv = require('dotenv');
 
-// middleware
+
+dotEnv.config();
+
+
 app.use(cors());
 app.use(express.json());
 
 
-// console.log(process.env.DB_USER);
-// console.log(process.env.DB_PASS);
-// mongo db connect driver start
+const uri = `mongodb+srv://allendodul6:DA8T1L9HjlzFaLHG@cluster0.bfzpc41.mongodb.net/?retryWrites=true&w=majority`
 
-
-
-const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.loifkbc.mongodb.net/?retryWrites=true&w=majority`;
-// const uri = "mongodb+srv://<username>:<password>@cluster0.loifkbc.mongodb.net/?retryWrites=true&w=majority";
-
+// const uri = "mongodb+srv://allendodul6:<password>@cluster0.bfzpc41.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
-    serverApi: {
-        version: ServerApiVersion.v1,
-        strict: true,
-        deprecationErrors: true,
-    }
+  serverApi: {
+    version: ServerApiVersion.v1,
+    strict: true,
+    deprecationErrors: true,
+  }
 });
+
+// // Create a MongoClient with a MongoClientOptions object to set the Stable API version
+// const client = new MongoClient(uri, {
+//     serverApi: {
+//         version: ServerApiVersion.v1,
+//         strict: true,
+//         deprecationErrors: true,
+//     }
+// });
+
 
 async function run() {
     try {
-        // Connect the client to the server	(optional starting in v4.7)
-        // await client.connect();
-        // start operation 
+        // Connect the client to the server (optional starting in v4.7)
+        await client.connect();
 
-        //  const userCollection = client.db('dailypulseDB').collection('users');
-        const pdfCollection = client.db('testing-multerDB').collection('pdf-store');
-        const offerCollection = client.db('testing-multerDB').collection('offer-store');
 
-        // app.post('/article', async (req, res) => {
-        //     const item = req.body;
-        //     const result = await articleCollection.insertOne(item);
-        //     res.send(result)
-        // });
-        // pdf post operation 
-        app.post('/upload', async (req, res) => {
+        const database = client.db('DailyDo');
+        const tasksCollection = database.collection('allTasks');
+        const projectCollection = database.collection('projects');
+        const projectTaskCollection = database.collection('projectSubtasks')
+        const usersCollection = database.collection('users');
+        const companyCollection = database.collection('companyes');
 
-            const item = req.body;
-            const result = await pdfCollection.insertOne(item);
-            res.send(result)
 
-        });
-        // pdf get operation 
-        app.get('/get-pdf', async (req, res) => {
-            const result = await pdfCollection.find().toArray();
-            res.send(result)
-        })
-        // offer post operation 
-        app.post('/post-offer', async (req, res) => {
 
-            const item = req.body;
-            const result = await offerCollection.insertOne(item);
-            console.log(result);
-            res.send(result)
 
-        });
 
-        // pdf get operation 
-        app.get('/get-offer', async (req, res) => {
-            const result = await offerCollection.find().toArray();
-            res.send(result)
-        })
 
-        // Send a ping to confirm a successful connection
+        //  Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
+
+
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
+
+        app.post('/users', async (req, res) => {
+            const user = req.body;
+            const company = { companyName: user.companyName };
+            const insertCompany = await companyCollection.insertOne(company);
+            const result = await usersCollection.insertOne(user);
+
+
+            res.send(result);
+        })
+
+
+        app.post('/normalUser', async (req, res) => {
+            const user = req.body;
+            const result = await usersCollection.insertOne(user);
+
+
+            res.send(result);
+        })
+
+
+        app.get('/allUsers', async (req, res) => {
+            const cursor = usersCollection.find();
+            const result = await cursor.toArray();
+
+
+            res.send(result)
+        })
+
+
+        app.get('/companyes', async (req, res) => {
+            const cursor = companyCollection.find();
+            const result = await cursor.toArray();
+
+
+            res.send(result);
+        })
+
+
+        app.post('/projects', async (req, res) => {
+            const projectInfo = req.body;
+            const result = await projectCollection.insertOne(projectInfo);
+
+
+            res.send(result);
+        })
+
+
+        app.get('/projects', async (req, res) => {
+            let query = {};
+
+
+            if (req.query.email) {
+                query = { email: req.query.email }
+            }
+            const result = await projectCollection.find(query).toArray();
+
+
+            res.send(result);
+        })
+
+
+        app.get('/projects/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const project = await projectCollection.findOne(query);
+
+
+            res.send(project)
+        })
+
+        app.post('/subtask', async (req, res) => {
+            const subtask = req.body;
+            const result = await projectTaskCollection.insertOne(subtask);
+
+
+            res.send(result);
+        })
+        app.get('/subtask', async (req, res) => {
+            let query = {};
+
+
+            if (req.query.projectName) {
+                query = { projectName: req.query.projectName };
+            }
+
+
+            const result = await projectTaskCollection.find(query).toArray();
+            res.send(result);
+        })
+
+
+        app.put('/subtask/:id', async (req, res) => {
+            const id = req.body._id;
+            const task = req.body;
+            const filter = { _id: new ObjectId(id) };
+            const options = { upsert: true };
+
+
+            const updateSubtask = {
+                $set: {
+                    taskStatus: task.taskStatus
+                }
+            }
+
+
+            const result = await projectTaskCollection.updateOne(filter, updateSubtask, options)
+
+
+            res.send(result);
+        })
+
+
+        app.delete('/subtask/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await projectTaskCollection.deleteOne(query);
+
+
+            res.send(result);
+        })
+
+
+        app.post('/tasks', async (req, res) => {
+            const task = req.body;
+            const result = await tasksCollection.insertOne(task);
+
+
+            res.send(result)
+        })
+
+
+        app.get('/tasks', async (req, res) => {
+            let query = {};
+
+
+            if (req.query.email) {
+                query = { email: req.query.email }
+            }
+            const result = await tasksCollection.find(query).toArray();
+
+
+            res.send(result)
+        })
+
+
+        app.delete('/tasks/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await tasksCollection.deleteOne(query);
+
+
+            res.send(result)
+        })
+
+
+        app.put('/tasks/:id', async (req, res) => {
+            const id = req.params.id;
+            const task = req.body;
+            const filter = { _id: new ObjectId(id) };
+            const options = { upsert: true };
+
+
+            const updateTask = {
+                $set: {
+                    status: task.status,
+                }
+            }
+            const result = await tasksCollection.updateOne(filter, updateTask, options)
+
+
+            res.send(result);
+        })
+
+
+       
     } finally {
         // Ensures that the client will close when you finish/error
         // await client.close();
@@ -83,11 +241,12 @@ async function run() {
 }
 run().catch(console.dir);
 
-
 app.get('/', (req, res) => {
-    res.send('simple CRUD is RUNNING')
-});
+    res.send('server is running')
+})
+
 
 app.listen(port, () => {
-    console.log(`simple CURD is running on port,${port}`);
+    console.log(`Server is running on port ${port}.`);
 })
+
